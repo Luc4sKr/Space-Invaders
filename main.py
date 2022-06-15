@@ -10,10 +10,15 @@ class Game:
 
 
     def run(self):
-        self.player.update()
-        self.player.draw(screen)
         # Atualizar todos os grupos de sprites
         # Desenhar todos os grupos de sprites
+        self.player.update()
+
+        self.player.sprite.laser_group.draw(screen)
+        self.player.draw(screen)
+
+
+
 
 
 if __name__ == '__main__':

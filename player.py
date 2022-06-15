@@ -1,5 +1,7 @@
 import pygame
 
+from laser import Laser
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, constraint, speed):
         super().__init__()
@@ -11,6 +13,8 @@ class Player(pygame.sprite.Sprite):
         self.ready = True
         self.laser_time = 0 # get_ticks
         self.laser_cooldown = 600
+
+        self.laser_group = pygame.sprite.Group()
 
     def get_input(self):
         key = pygame.key.get_pressed()
@@ -32,7 +36,7 @@ class Player(pygame.sprite.Sprite):
                 self.ready = True
 
     def shoot_laser(self):
-        print("shoot")
+        self.laser_group.add(Laser(self.rect.center, -8))
 
     def constraint(self):
         if self.rect.left <= 0:
@@ -40,8 +44,8 @@ class Player(pygame.sprite.Sprite):
         if self.rect.right >= self.max_x_constraint:
             self.rect.right = self.max_x_constraint
 
-
     def update(self):
         self.get_input()
         self.constraint()
         self.recharge()
+        self.laser_group.update()
