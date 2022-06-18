@@ -13,6 +13,11 @@ class Game:
         player_sprite = Player((SCREEN_X / 2, SCREEN_Y), SCREEN_X, 5)
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
+        # Health and score setup
+        self.lives = 3
+        self.lives_surface = pygame.image.load("assets/images/player.png").convert_alpha()
+        self.lives_x_start_pos = SCREEN_X - (self.lives_surface.get_size()[0] * 3  + 30)
+
         # Obstacle
         self.shape = obstacle.shape
         self.block_size = 6
@@ -84,7 +89,6 @@ class Game:
     def extra_alien_timer(self):
         self.extra_spawn_time -= 1
         if self.extra_spawn_time <= 0:
-            print("a")
             self.extra_alien.add(Extra(choice(["right", "left"])))
             self.extra_spawn_time = randint(400, 800)
 
@@ -114,6 +118,11 @@ class Game:
                 # Player collision
                 if pygame.sprite.spritecollide(laser, self.player, False):
                     laser.kill()
+                    self.lives -= 1
+                    if self.lives <= 0:
+                        pygame.quit()
+                        sys.exit()
+
 
         # Aliens
         if self.alien_group:
@@ -124,6 +133,10 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
+    def display_lives(self):
+        for live in range(self.lives):
+            x = self.lives_x_start_pos + (live * (self.lives_surface.get_size()[0] + 10))
+            screen.blit(self.lives_surface, (x, 8))
 
     def run(self):
         # Atualiza todos os grupos de sprites
@@ -135,6 +148,7 @@ class Game:
         self.alien_position_checker()
         self.extra_alien_timer()
         self.collision_checks()
+        self.display_lives()
 
         # Desenha todos os grupos de sprites
         self.player.sprite.laser_group.draw(screen)
