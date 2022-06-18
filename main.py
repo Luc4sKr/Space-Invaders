@@ -13,10 +13,14 @@ class Game:
         player_sprite = Player((SCREEN_X / 2, SCREEN_Y), SCREEN_X, 5)
         self.player = pygame.sprite.GroupSingle(player_sprite)
 
-        # Health and score setup
+        # Health
         self.lives = 3
         self.lives_surface = pygame.image.load("assets/images/player.png").convert_alpha()
         self.lives_x_start_pos = SCREEN_X - (self.lives_surface.get_size()[0] * 3  + 30)
+
+        # Score
+        self.score = 0
+        self.font = pygame.font.Font("assets/8-bit_font.ttf", 20)
 
         # Obstacle
         self.shape = obstacle.shape
@@ -101,12 +105,16 @@ class Game:
                     laser.kill()
 
                 # Alien collisions
-                if pygame.sprite.spritecollide(laser, self.alien_group, True):
+                alien_hit = pygame.sprite.spritecollide(laser, self.alien_group, True)
+                if alien_hit:
+                    for alien in alien_hit:
+                        self.score += alien.value
                     laser.kill()
 
                 # Extra alien collision
                 if pygame.sprite.spritecollide(laser, self.extra_alien, True):
                     laser.kill()
+                    self.score += 500
 
         # Alien lasers
         if self.alien_lasers_group:
@@ -138,17 +146,25 @@ class Game:
             x = self.lives_x_start_pos + (live * (self.lives_surface.get_size()[0] + 10))
             screen.blit(self.lives_surface, (x, 8))
 
+    def display_score(self):
+        score_surface = self.font.render(f"Score: {self.score}", False, "white")
+        score_rect = score_surface.get_rect()
+        score_rect.topleft = (10, 10)
+        screen.blit(score_surface, score_rect)
+
     def run(self):
         # Atualiza todos os grupos de sprites
         self.player.update()
-        self.alien_group.update(self.alien_direction)
         self.alien_lasers_group.update()
         self.extra_alien.update()
 
+        self.alien_group.update(self.alien_direction)
         self.alien_position_checker()
         self.extra_alien_timer()
         self.collision_checks()
+
         self.display_lives()
+        self.display_score()
 
         # Desenha todos os grupos de sprites
         self.player.sprite.laser_group.draw(screen)
