@@ -165,6 +165,12 @@ class Game:
         score_rect.topleft = (10, 10)
         screen.blit(score_surface, score_rect)
 
+    def victory_message(self):
+        if not self.alien_group.sprites():
+            victory_surface = self.font.render("YOU WON", False, "white")
+            victory_rect = victory_surface.get_rect(center=(SCREEN_X/2, SCREEN_Y/2))
+            screen.blit(victory_surface, victory_rect)
+
     def run(self):
         # Atualiza todos os grupos de sprites
         self.player.update()
@@ -175,6 +181,7 @@ class Game:
         self.alien_position_checker()
         self.extra_alien_timer()
         self.collision_checks()
+        self.victory_message()
 
         self.display_lives()
         self.display_score()
