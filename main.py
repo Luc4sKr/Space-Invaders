@@ -7,8 +7,72 @@ from player import Player
 from alien import Alien, Extra
 from laser import Laser
 
+
+class Menu:
+    def __init__(self):
+        self.show_menu = True
+        self.click = False
+
+        self.crt = CRT()
+
+
+    def menu(self):
+        self.show_menu = True
+        while self.show_menu:
+            clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.show_menu = False
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.click = True
+
+            draw_text("SPACE", 42, (255, 255, 255), SCREEN_X/2, 80)
+            draw_text("INVADERS", 42, (255, 255, 255), SCREEN_X/2, 120)
+            draw_text("in python", 18, (55,113,161), SCREEN_X/2, 150)
+
+            new_game_button = self.create_button(SCREEN_X/2 - 120, 220, SCREEN_X/2 - 50, 50, (0, 0, 0), "NEW GAME")
+            highscores_button = self.create_button(SCREEN_X/2 - 120, 280, SCREEN_X/2 - 50, 50, (0, 0, 0), "HIGHTSCORES")
+            help_button = self.create_button(SCREEN_X/2 - 120, 340, SCREEN_X/2 - 50, 50, (0, 0, 0), "HELP")
+            quit_button = self.create_button(SCREEN_X/2 - 120, 400, SCREEN_X/2 - 50, 50, (0, 0, 0), "QUIT")
+
+            mx, my = pygame.mouse.get_pos()
+            if new_game_button.collidepoint((mx, my)):
+                if self.click:
+                    self.show_menu = False
+            if highscores_button.collidepoint((mx, my)):
+                if self.click:
+                    pass
+            if help_button.collidepoint((mx , my)):
+                if self.click:
+                    pass
+            if quit_button.collidepoint((mx, my)):
+                if self.click:
+                    pygame.quit()
+                    sys.exit()
+
+            self.click = False
+
+            self.crt.draw()
+            pygame.display.update()
+            screen.fill((0, 0, 0))
+
+    @staticmethod
+    def create_button(x1, y1, x2, y2, color, text):
+        button_border = pygame.Rect(x1 - 2, y1 - 2, x2 + 4, y2 + 4)
+        button = pygame.Rect(x1, y1, x2, y2)
+        pygame.draw.rect(screen, (255, 255, 255), button_border)
+        pygame.draw.rect(screen, color, button)
+        draw_text(text, 18, (255, 255, 255), x1+(x2/2), y1+(y2/2))
+        return button
+
+
 class Game:
     def __init__(self):
+        self.game_over = False
+
         # Player
         player_sprite = Player((SCREEN_X / 2, SCREEN_Y), SCREEN_X, 5)
         self.player = pygame.sprite.GroupSingle(player_sprite)
@@ -51,6 +115,8 @@ class Game:
         self.explosion_sound = pygame.mixer.Sound("assets/audio/explosion.wav")
         self.explosion_sound.set_volume(0.1)
 
+        # Mouse
+        self.click = False
 
     def create_obstacle(self, x_start, y_start, off_set_x):
         for row_index, row in enumerate(self.shape):
@@ -115,6 +181,7 @@ class Game:
                 # Obstacle collisions
                 if pygame.sprite.spritecollide(laser, self.blocks_group, True):
                     laser.kill()
+                    pass
 
                 # Alien collisions
                 alien_hit = pygame.sprite.spritecollide(laser, self.alien_group, True)
@@ -144,7 +211,6 @@ class Game:
                         pygame.quit()
                         sys.exit()
 
-
         # Aliens
         if self.alien_group:
             for alien in self.alien_group:
@@ -160,16 +226,22 @@ class Game:
             screen.blit(self.lives_surface, (x, 8))
 
     def display_score(self):
-        score_surface = self.font.render(f"Score: {self.score}", False, "white")
-        score_rect = score_surface.get_rect()
-        score_rect.topleft = (10, 10)
-        screen.blit(score_surface, score_rect)
+        draw_text(f"SCORE: {self.score}", 16, (255, 255, 255), 20, 30, topleft=True)
 
     def victory_message(self):
         if not self.alien_group.sprites():
-            victory_surface = self.font.render("YOU WON", False, "white")
-            victory_rect = victory_surface.get_rect(center=(SCREEN_X/2, SCREEN_Y/2))
-            screen.blit(victory_surface, victory_rect)
+            draw_text("YOU WON", 22, (255, 255, 255), SCREEN_X/2, 200)
+
+            button = pygame.Rect(SCREEN_X/2 - 100, 200, SCREEN_X/2 - 100, 50)
+            pygame.draw.rect(screen, (255, 0, 0), button)
+
+            mx, my = pygame.mouse.get_pos()
+            if button.collidepoint((mx, my)):
+                if self.click:
+                    self.game_over = True
+                    menu.menu()
+
+
 
     def run(self):
         # Atualiza todos os grupos de sprites
@@ -224,6 +296,22 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
     pygame.display.set_caption("Space Invaders")
     clock = pygame.time.Clock()
+    FPS = 60
+
+    def draw_text(text, tam, color, x, y, topleft=False):
+        fonte = pygame.font.Font("assets/8-bit_font.ttf", tam)
+        text_obj = fonte.render(text, False, color)
+        text_rect = text_obj.get_rect()
+        if topleft:
+            text_rect.topleft = (x, y)
+        else:
+            text_rect.center = (x, y)
+        screen.blit(text_obj, text_rect)
+
+
+    menu = Menu()
+    menu.menu()
+
 
     game = Game()
     crt = CRT()
@@ -231,7 +319,8 @@ if __name__ == '__main__':
     ALIENLASER = pygame.USEREVENT + 1
     pygame.time.set_timer(ALIENLASER, 800)
 
-    while True:
+
+    while not game.game_over:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -239,6 +328,10 @@ if __name__ == '__main__':
 
             if event.type == ALIENLASER:
                 game.alien_shot()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    game.click = True
 
         screen.fill((0, 0, 0))
 
