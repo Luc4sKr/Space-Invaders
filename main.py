@@ -7,6 +7,8 @@ from player import Player
 from alien import Alien, Extra
 from laser import Laser
 
+from utils.util import Data
+
 
 class Menu:
     def __init__(self):
@@ -14,7 +16,6 @@ class Menu:
         self.click = False
 
         self.crt = CRT()
-
 
     def menu(self):
         self.show_menu = True
@@ -46,7 +47,7 @@ class Menu:
                     new_game()
             if highscores_button.collidepoint((mx, my)):
                 if self.click:
-                    pass
+                    self.highscores_screen()
             if help_button.collidepoint((mx , my)):
                 if self.click:
                     self.help_screen()
@@ -60,7 +61,6 @@ class Menu:
             self.crt.draw()
             pygame.display.update()
             screen.fill((0, 0, 0))
-
 
     def help_screen(self):
         self.show_help_screen = True
@@ -108,20 +108,67 @@ class Menu:
             pygame.display.update()
             screen.fill((0, 0, 0))
 
+    def highscores_screen(self):
+        self.show_highscores_screen = True
+        self.click = False
+        while self.show_highscores_screen:
+            clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.click = True
+
+            draw_text("HIGHSCORES", 42, (255, 255, 255), SCREEN_X/2, 80)
+
+            y_pos = 0
+            for v in data.json_obj["score"]:
+                draw_text(f"Score: {v}", 16, (255, 255, 255), SCREEN_X/8 - 30, 150 + y_pos, topleft=True)
+                y_pos += 20
+
+            y_pos = 0
+            for v in data.json_obj["date"]:
+                draw_text(f"Date: {v}", 16, (255, 255, 255), SCREEN_X/2 , 150 + y_pos, topleft=True)
+                y_pos += 20
+
+            back_to_menu_button = menu.create_button(150, 530, 300, 50, (0, 0, 0), "BACK TO MENU")
+            reset_button = menu.create_button(500, 550, 80, 30, (0, 0, 0), "RESET", font_size=12)
+
+            mx, my = pygame.mouse.get_pos()
+            if back_to_menu_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.show_highscores_screen = False
+
+            if reset_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    data.reset()
+
+            self.click = False
+
+            self.crt.draw()
+            pygame.display.update()
+            screen.fill((0, 0, 0))
 
     @staticmethod
-    def create_button(x1, y1, x2, y2, color, text):
+    def create_button(x1, y1, x2, y2, color, text, font_size=18):
         button_border = pygame.Rect(x1 - 2, y1 - 2, x2 + 4, y2 + 4)
         button = pygame.Rect(x1, y1, x2, y2)
         pygame.draw.rect(screen, (255, 255, 255), button_border)
         pygame.draw.rect(screen, color, button)
-        draw_text(text, 18, (255, 255, 255), x1+(x2/2), y1+(y2/2))
+        draw_text(text, font_size, (255, 255, 255), x1+(x2/2), y1+(y2/2))
         return button
 
 
 class Game:
     def __init__(self):
         self.game_over = False
+
+        self.crt = CRT()
 
         # Player
         player_sprite = Player((SCREEN_X / 2, SCREEN_Y), SCREEN_X, 5)
@@ -266,19 +313,6 @@ class Game:
                     pygame.quit()
                     sys.exit()
 
-    def game_over_screen(self):
-        if self.lives <= 0:
-            draw_text("YOU LOSE", 44, (255, 0, 0), SCREEN_X/2, 200)
-            back_to_menu_button = menu.create_button(150, 250, 400 - 100, 50, (0, 0, 0), "BACK TO MENU")
-
-            mx, my = pygame.mouse.get_pos()
-            if back_to_menu_button.collidepoint((mx, my)):
-                if self.click:
-                    self.click = False
-                    self.game_over = True
-                    self.music.stop()
-                    menu.menu()
-
     def display_lives(self):
         for live in range(self.lives):
             x = self.lives_x_start_pos + (live * (self.lives_surface.get_size()[0] + 10))
@@ -287,7 +321,7 @@ class Game:
     def display_score(self):
         draw_text(f"SCORE: {self.score}", 16, (255, 255, 255), 20, 30, topleft=True)
 
-    def victory_message(self):
+    def victory_screen(self):
         if not self.alien_group.sprites():
             draw_text("YOU WON", 44, (0, 255, 0), SCREEN_X/2, 200)
 
@@ -299,7 +333,66 @@ class Game:
                     self.click = False
                     self.game_over = True
                     self.music.stop()
+                    data.add_score(self.score)
                     menu.menu()
+
+    def game_over_screen(self):
+        if self.lives <= 0:
+            draw_text("YOU LOSE", 44, (255, 0, 0), SCREEN_X/2, 200)
+            back_to_menu_button = menu.create_button(150, 250, 300, 50, (0, 0, 0), "BACK TO MENU")
+
+            mx, my = pygame.mouse.get_pos()
+            if back_to_menu_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.game_over = True
+                    self.music.stop()
+                    data.add_score(self.score)
+                    menu.menu()
+
+    def pause_menu_screen(self):
+        self.show_pause_menu_screen = True
+        self.click = False
+        while self.show_pause_menu_screen:
+            clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.click = True
+
+            draw_text("PAUSE", 42, (255, 255, 255), SCREEN_X/2, 80)
+
+            back_to_game_button = menu.create_button(150, 170, 300, 50, (0, 0, 0), "BACK TO GAME")
+            back_to_menu_button = menu.create_button(150, 230, 300, 50, (0, 0, 0), "BACK TO MENU")
+            quit_button = menu.create_button(150, 290, 300, 50, (0, 0, 0), "QUIT GAME")
+
+            mx, my = pygame.mouse.get_pos()
+            if back_to_game_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.show_pause_menu_screen = False
+            if back_to_menu_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.show_pause_menu_screen = False
+                    self.game_over = True
+                    self.music.stop()
+                    menu.menu()
+            if quit_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    pygame.quit()
+                    sys.exit()
+
+            self.click = False
+
+            self.crt.draw()
+            pygame.display.update()
+            screen.fill((0, 0, 0))
 
     def run(self):
         # Atualiza todos os grupos de sprites
@@ -329,7 +422,7 @@ class Game:
 
         # Telas
         self.game_over_screen()
-        self.victory_message()
+        self.victory_screen()
 
         self.click = False
 
@@ -394,6 +487,10 @@ if __name__ == '__main__':
                     if event.button == 1:
                         game.click = True
 
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        game.pause_menu_screen()
+
             screen.fill((0, 0, 0))
 
             game.run()
@@ -403,5 +500,7 @@ if __name__ == '__main__':
             clock.tick(60)
 
 
+    data = Data()
     menu = Menu()
+
     menu.menu()
