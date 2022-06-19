@@ -6,6 +6,7 @@ from datetime import  date
 class Data:
     def __init__(self):
 
+        self.json_obj = None
         self.open_file()
 
     def open_file(self):
@@ -30,7 +31,7 @@ class Data:
             json.dump(self.json_obj, save, indent=4)
 
     def reset(self):
-        with open(path.join(getcwd() + "/utils/data.json"), "w") as data:
+        with open(path.join(getcwd() + "/utils/data.json"), "w"):
             self.json_obj = {"score": [0, 0, 0, 0, 0], "date": ["yyyy/mm/dd", "yyyy/mm/dd", "yyyy/mm/dd", "yyyy/mm/dd", "yyyy/mm/dd"]}
 
             self.save_file()

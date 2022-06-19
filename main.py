@@ -1,20 +1,27 @@
 import pygame
-import sys
+
+from sys import exit
 from random import choice, randint
 
-import obstacle
-from player import Player
-from alien import Alien, Extra
-from laser import Laser
+from scripts import obstacle
+from scripts.player import Player
+from scripts.alien import Alien, Extra
+from scripts.laser import Laser
 
 from utils.util import Data
 
 
 class Menu:
     def __init__(self):
-        self.show_menu = True
+        # Click do mouse
         self.click = False
 
+        # Controle dos laços de repetição
+        self.show_menu = True
+        self.show_help_screen = False
+        self.show_highscores_screen = False
+
+        # Classe para estilizar o jogo
         self.crt = CRT()
 
     def menu(self):
@@ -25,7 +32,7 @@ class Menu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.show_menu = False
-                    sys.exit()
+                    exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -54,7 +61,7 @@ class Menu:
             if quit_button.collidepoint((mx, my)):
                 if self.click:
                     pygame.quit()
-                    sys.exit()
+                    exit()
 
             self.click = False
 
@@ -70,7 +77,7 @@ class Menu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    sys.exit()
+                    exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -116,7 +123,7 @@ class Menu:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    sys.exit()
+                    exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -311,7 +318,7 @@ class Game:
 
                 if pygame.sprite.spritecollide(alien, self.player, False):
                     pygame.quit()
-                    sys.exit()
+                    exit()
 
     def display_lives(self):
         for live in range(self.lives):
@@ -358,7 +365,7 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    sys.exit()
+                    exit()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -386,7 +393,7 @@ class Game:
                 if self.click:
                     self.click = False
                     pygame.quit()
-                    sys.exit()
+                    exit()
 
             self.click = False
 
@@ -477,7 +484,7 @@ if __name__ == '__main__':
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
-                    sys.exit()
+                    exit()
 
                 if event.type == ALIENLASER:
                     if game.lives > 0:
