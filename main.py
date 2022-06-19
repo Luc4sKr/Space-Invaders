@@ -18,6 +18,7 @@ class Menu:
 
     def menu(self):
         self.show_menu = True
+        self.click = False
         while self.show_menu:
             clock.tick(FPS)
             for event in pygame.event.get():
@@ -42,12 +43,13 @@ class Menu:
             if new_game_button.collidepoint((mx, my)):
                 if self.click:
                     self.show_menu = False
+                    new_game()
             if highscores_button.collidepoint((mx, my)):
                 if self.click:
                     pass
             if help_button.collidepoint((mx , my)):
                 if self.click:
-                    pass
+                    self.help_screen()
             if quit_button.collidepoint((mx, my)):
                 if self.click:
                     pygame.quit()
@@ -58,6 +60,54 @@ class Menu:
             self.crt.draw()
             pygame.display.update()
             screen.fill((0, 0, 0))
+
+
+    def help_screen(self):
+        self.show_help_screen = True
+        self.click = False
+        while self.show_help_screen:
+            clock.tick(FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.click = True
+
+            draw_text("HELP", 42, (255, 255, 255), SCREEN_X/2, 80)
+
+            draw_text("COMANDS", 22, (255, 255, 255), 100, 150)
+
+            draw_text("- MOVIMENTATION", 14, (255, 255, 255), 50, 170, topleft=True)
+            menu.create_button(50, 200, 50, 50, (0, 0, 0), "<-")
+            menu.create_button(120, 200, 50, 50, (0, 0, 0), "->")
+            draw_text("OR", 18, (255, 255, 255), 250, 220)
+            menu.create_button(330, 200, 50, 50, (0, 0, 0), "A")
+            menu.create_button(400, 200, 50, 50, (0, 0, 0), "D")
+
+            draw_text("- SHOOT", 14, (255, 255, 255), 50, 270, topleft=True)
+            menu.create_button(50, 300, 250, 50, (0, 0, 0), "SPACE")
+
+            draw_text("- PAUSE", 14, (255, 255, 255), 50, 370,topleft=True)
+            menu.create_button(50, 400, 50, 50, (0, 0, 0), "ESC")
+
+
+            back_to_menu_button = menu.create_button(150, 530, 300, 50, (0, 0, 0), "BACK TO MENU")
+
+            mx, my = pygame.mouse.get_pos()
+            if back_to_menu_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.show_help_screen = False
+
+            self.click = False
+
+            self.crt.draw()
+            pygame.display.update()
+            screen.fill((0, 0, 0))
+
 
     @staticmethod
     def create_button(x1, y1, x2, y2, color, text):
@@ -105,9 +155,9 @@ class Game:
         self.extra_spawn_time = randint(400, 800)
 
         # Audio
-        music = pygame.mixer.Sound("assets/audio/music.wav")
-        music.set_volume(0.06)
-        music.play(loops=-1)
+        self.music = pygame.mixer.Sound("assets/audio/music.wav")
+        self.music.set_volume(0.06)
+        self.music.play(loops=-1)
 
         self.laser_sound = pygame.mixer.Sound("assets/audio/laser.wav")
         self.laser_sound.set_volume(0.08)
@@ -181,7 +231,6 @@ class Game:
                 # Obstacle collisions
                 if pygame.sprite.spritecollide(laser, self.blocks_group, True):
                     laser.kill()
-                    pass
 
                 # Alien collisions
                 alien_hit = pygame.sprite.spritecollide(laser, self.alien_group, True)
@@ -207,9 +256,6 @@ class Game:
                 if pygame.sprite.spritecollide(laser, self.player, False):
                     laser.kill()
                     self.lives -= 1
-                    if self.lives <= 0:
-                        pygame.quit()
-                        sys.exit()
 
         # Aliens
         if self.alien_group:
@@ -219,6 +265,19 @@ class Game:
                 if pygame.sprite.spritecollide(alien, self.player, False):
                     pygame.quit()
                     sys.exit()
+
+    def game_over_screen(self):
+        if self.lives <= 0:
+            draw_text("YOU LOSE", 44, (255, 0, 0), SCREEN_X/2, 200)
+            back_to_menu_button = menu.create_button(150, 250, 400 - 100, 50, (0, 0, 0), "BACK TO MENU")
+
+            mx, my = pygame.mouse.get_pos()
+            if back_to_menu_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.game_over = True
+                    self.music.stop()
+                    menu.menu()
 
     def display_lives(self):
         for live in range(self.lives):
@@ -230,33 +289,34 @@ class Game:
 
     def victory_message(self):
         if not self.alien_group.sprites():
-            draw_text("YOU WON", 22, (255, 255, 255), SCREEN_X/2, 200)
+            draw_text("YOU WON", 44, (0, 255, 0), SCREEN_X/2, 200)
 
-            button = pygame.Rect(SCREEN_X/2 - 100, 200, SCREEN_X/2 - 100, 50)
-            pygame.draw.rect(screen, (255, 0, 0), button)
+            back_to_menu_button = menu.create_button(150, 250, 400 - 100, 50, (0, 0, 0), "BACK TO MENU")
 
             mx, my = pygame.mouse.get_pos()
-            if button.collidepoint((mx, my)):
+            if back_to_menu_button.collidepoint((mx, my)):
                 if self.click:
+                    self.click = False
                     self.game_over = True
+                    self.music.stop()
                     menu.menu()
-
-
 
     def run(self):
         # Atualiza todos os grupos de sprites
-        self.player.update()
-        self.alien_lasers_group.update()
-        self.extra_alien.update()
-
-        self.alien_group.update(self.alien_direction)
         self.alien_position_checker()
-        self.extra_alien_timer()
         self.collision_checks()
-        self.victory_message()
+        if self.alien_group.sprites():
+            self.extra_alien_timer()
 
         self.display_lives()
         self.display_score()
+
+        # Para quando as vidas acabarem, tudo fica parado
+        if self.lives > 0:
+            self.player.update()
+            self.alien_lasers_group.update()
+            self.extra_alien.update()
+            self.alien_group.update(self.alien_direction)
 
         # Desenha todos os grupos de sprites
         self.player.sprite.laser_group.draw(screen)
@@ -266,6 +326,12 @@ class Game:
         self.alien_group.draw(screen)
         self.alien_lasers_group.draw(screen)
         self.extra_alien.draw(screen)
+
+        # Telas
+        self.game_over_screen()
+        self.victory_message()
+
+        self.click = False
 
 
 class CRT:
@@ -308,35 +374,34 @@ if __name__ == '__main__':
             text_rect.center = (x, y)
         screen.blit(text_obj, text_rect)
 
+    def new_game():
+        game = Game()
+        crt = CRT()
+
+        ALIENLASER = pygame.USEREVENT + 1
+        pygame.time.set_timer(ALIENLASER, 800)
+        while not game.game_over:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == ALIENLASER:
+                    if game.lives > 0:
+                        game.alien_shot()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        game.click = True
+
+            screen.fill((0, 0, 0))
+
+            game.run()
+            crt.draw()
+
+            pygame.display.flip()
+            clock.tick(60)
+
 
     menu = Menu()
     menu.menu()
-
-
-    game = Game()
-    crt = CRT()
-
-    ALIENLASER = pygame.USEREVENT + 1
-    pygame.time.set_timer(ALIENLASER, 800)
-
-
-    while not game.game_over:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            if event.type == ALIENLASER:
-                game.alien_shot()
-
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    game.click = True
-
-        screen.fill((0, 0, 0))
-
-        game.run()
-        crt.draw()
-
-        pygame.display.flip()
-        clock.tick(60)
