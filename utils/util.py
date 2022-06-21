@@ -44,8 +44,6 @@ class Data:
             self.json_obj["score"].pop(-1)
             self.json_obj["date"].pop(-1)
 
-        print(self.json_obj["score"])
-
         self.save_file()
 
     def reset(self):

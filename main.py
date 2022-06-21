@@ -14,7 +14,7 @@ from utils.util import Data
 
 class Menu:
     """
-    Classe responsável por todo o menu principal do jogo
+    Classe responsável pelo menu principal do jogo
     """
     def __init__(self):
         # Click do mouse
@@ -217,7 +217,7 @@ class Game:
     """
     Classe responsável por toda a lógica do jogo
     """
-    def __init__(self):
+    def __init__(self, score=0):
         # Controle dos laços de repetição
         self.game_over = False
         self.show_pause_menu_screen = False
@@ -235,7 +235,7 @@ class Game:
         self.lives_x_start_pos = SCREEN_X - (self.lives_surface.get_size()[0] * 3  + 30)
 
         # Score
-        self.score = 0
+        self.score = score
 
         # Obstáculo
         self.shape = obstacle.shape
@@ -431,9 +431,11 @@ class Game:
         if not self.alien_group.sprites():
             draw_text("YOU WON", 44, (0, 255, 0), SCREEN_X/2, 200)
 
-            back_to_menu_button = menu.create_button(150, 250, 400 - 100, 50, (0, 0, 0), "BACK TO MENU")
+            back_to_menu_button = menu.create_button(150, 250, 300, 50, (0, 0, 0), "BACK TO MENU")
+            continue_game_button = menu.create_button(150, 310, 300, 50, (0, 0, 0), "CONTINUE GAME")
 
             mx, my = pygame.mouse.get_pos()
+
             if back_to_menu_button.collidepoint((mx, my)):
                 if self.click:
                     self.click = False
@@ -441,6 +443,12 @@ class Game:
                     self.music.stop()
                     data.add_score(self.score)
                     menu.menu()
+            if continue_game_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.game_over = True
+                    self.music.stop()
+                    new_game(score=self.score)
 
     def game_over_screen(self):
         """
@@ -448,9 +456,12 @@ class Game:
         """
         if self.lives <= 0:
             draw_text("YOU LOSE", 44, (255, 0, 0), SCREEN_X/2, 200)
+
             back_to_menu_button = menu.create_button(150, 250, 300, 50, (0, 0, 0), "BACK TO MENU")
+            new_game_button = menu.create_button(150, 310, 300, 50, (0, 0, 0), "NEW GAME")
 
             mx, my = pygame.mouse.get_pos()
+
             if back_to_menu_button.collidepoint((mx, my)):
                 if self.click:
                     self.click = False
@@ -458,6 +469,13 @@ class Game:
                     self.music.stop()
                     data.add_score(self.score)
                     menu.menu()
+            if new_game_button.collidepoint((mx, my)):
+                if self.click:
+                    self.click = False
+                    self.game_over = True
+                    self.music.stop()
+                    data.add_score(self.score)
+                    new_game()
 
     def pause_menu_screen(self):
         """
@@ -608,11 +626,11 @@ if __name__ == '__main__':
             text_rect.center = (x, y)
         screen.blit(text_obj, text_rect)
 
-    def new_game():
+    def new_game(score=0):
         """
         Cria um novo jogo.
         """
-        game = Game()
+        game = Game(score)
 
         ALIENLASER = pygame.USEREVENT + 1
         pygame.time.set_timer(ALIENLASER, 800)
