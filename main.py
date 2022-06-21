@@ -11,8 +11,11 @@ from scripts.laser import Laser
 
 from utils.util import Data
 
-# Classe responsável por todo o menu principal do jogo
+
 class Menu:
+    """
+    Classe responsável por todo o menu principal do jogo
+    """
     def __init__(self):
         # Click do mouse
         self.click = False
@@ -332,6 +335,8 @@ class Game:
             if aliens.rect.left <= 0:
                 self.alien_direction = 1
                 self.alien_move_down(2)
+            if aliens.rect.bottom >= SCREEN_Y:
+                self.lives = 0
 
     def alien_move_down(self, distance):
         """
