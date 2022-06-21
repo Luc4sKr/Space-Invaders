@@ -25,9 +25,6 @@ class Menu:
         self.show_help_screen = False
         self.show_highscores_screen = False
 
-        # Classe para estilizar o jogo
-        self.crt = CRT()
-
     def menu(self):
         """
         Menu principal do jogo
@@ -66,6 +63,7 @@ class Menu:
                     new_game()
             if highscores_button.collidepoint((mx, my)):
                 if self.click:
+                    data.organize_file()
                     self.highscores_screen()
             if help_button.collidepoint((mx , my)):
                 if self.click:
@@ -79,7 +77,7 @@ class Menu:
             self.click = False
 
             # Style/Update
-            self.crt.draw()
+            crt.draw()
             pygame.display.update()
             screen.fill((0, 0, 0))
 
@@ -100,7 +98,7 @@ class Menu:
                     if event.button == 1:
                         self.click = True
 
-            # Todo o texto e botões
+            # Texto e botões
             draw_text("HELP", 42, (255, 255, 255), SCREEN_X/2, 80)
 
             draw_text("COMANDS", 22, (255, 255, 255), 100, 150)
@@ -133,7 +131,7 @@ class Menu:
             self.click = False
 
             # Style/Update
-            self.crt.draw()
+            crt.draw()
             pygame.display.update()
             screen.fill((0, 0, 0))
 
@@ -190,7 +188,7 @@ class Menu:
             self.click = False
 
             # Style/Update
-            self.crt.draw()
+            crt.draw()
             pygame.display.update()
             screen.fill((0, 0, 0))
 
@@ -325,7 +323,9 @@ class Game:
 
     def alien_position_checker(self):
         """
-        Verifica se os aliens colidiram com a lateral da tela
+        Verifica se os aliens colidiram com a lateral da tela ou se colidiram com a borda inferior.
+        Se colidir com a borda inferior o Player perde.
+        Se colidir com as laterais o Alien se move para baixo.
         """
         all_aliens = self.alien_group.sprites()
         for aliens in all_aliens:
@@ -410,7 +410,6 @@ class Game:
                 if pygame.sprite.spritecollide(alien, self.player, False):
                     self.lives -= 1
 
-
     def display_lives(self):
         """
         Desenha as vidas do Player na tela.
@@ -461,6 +460,9 @@ class Game:
                     menu.menu()
 
     def pause_menu_screen(self):
+        """
+        Tela de pause
+        """
         self.show_pause_menu_screen = True
         self.click = False
         while self.show_pause_menu_screen:
@@ -505,6 +507,10 @@ class Game:
             screen.fill((0, 0, 0))
 
     def run(self):
+        """
+        Função que faz o jogo rodar, atualiza, checa colisões, desenha na tela, etc...
+        """
+
         # Atualiza todos os grupos de sprites
         self.alien_position_checker()
         self.collision_checks()
@@ -534,21 +540,32 @@ class Game:
         self.game_over_screen()
         self.victory_screen()
 
+        # No final de tudo o click do mouse volta a ser falso
         self.click = False
 
-# Classe para deixar o estilo do jogo um pouco mais retrô
+
 class CRT:
+    """
+    Classe para deixar o estilo do jogo um pouco mais retrô
+    """
     def __init__(self):
-        self.tv = pygame.image.load("assets/images/tv.png").convert_alpha()
+        # Bordas de TV antiga
+        self.tv = pygame.image.load(path.join(getcwd() + "/assets/images/tv.png")).convert_alpha()
         self.tv = pygame.transform.scale(self.tv, (SCREEN_X, SCREEN_Y))
 
     def draw(self):
+        """
+        Desenha na tela
+        """
         self.tv.set_alpha(randint(75, 90))
         self.create_crt_lines()
 
         screen.blit(self.tv, (0, 0))
 
     def create_crt_lines(self):
+        """
+        Cria linhas para dar um estilo retrô para o jogo
+        """
         line_height = 3
         line_amount = int(SCREEN_X / line_height)
         for line in range(line_amount):
@@ -557,17 +574,31 @@ class CRT:
 
 
 if __name__ == '__main__':
+    # Inicia o pygame
     pygame.init()
 
+    # Tamanho da tela
     SCREEN_X = 600
     SCREEN_Y = 600
 
+    # Tela
     screen = pygame.display.set_mode((SCREEN_X, SCREEN_Y))
-    pygame.display.set_caption("Space Invaders")
+    pygame.display.set_caption("Space Invaders") # Nome do jogo que fica na janela do jogo
+
+    # Ajuda a controlar a taxa de atualização do jogo - FPS
     clock = pygame.time.Clock()
     FPS = 60
 
     def draw_text(text, tam, color, x, y, topleft=False):
+        """
+        Desenha um texto na tela
+        :param text: Texto.
+        :param tam: Tamanho do texto.
+        :param color: Cor do texto.
+        :param x: Posição do eixo x.
+        :param y: Posição do eixo y.
+        :param topleft: Se o parametro for True se baseia no topo esquerdo para as cordenadas.
+        """
         fonte = pygame.font.Font("assets/8-bit_font.ttf", tam)
         text_obj = fonte.render(text, False, color)
         text_rect = text_obj.get_rect()
@@ -578,8 +609,10 @@ if __name__ == '__main__':
         screen.blit(text_obj, text_rect)
 
     def new_game():
+        """
+        Cria um novo jogo.
+        """
         game = Game()
-        crt = CRT()
 
         ALIENLASER = pygame.USEREVENT + 1
         pygame.time.set_timer(ALIENLASER, 800)
@@ -610,7 +643,15 @@ if __name__ == '__main__':
             clock.tick(60)
 
 
+    # Classe dos dados do jogo
     data = Data()
+
+    # Classe para estilizar o jogo
+    crt = CRT()
+
+    # Classe do menu
     menu = Menu()
 
-    menu.menu()
+
+    # --- COMEÇA O JOGO AQUI --- #
+    menu.menu() # Começa o jogo pelo menu

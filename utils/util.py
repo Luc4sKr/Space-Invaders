@@ -15,8 +15,8 @@ class Data:
             self.json_obj = json.load(file)
 
     def add_score(self, score):
-        self.json_obj['score'].append(score)
-        self.json_obj['date'].append(f"{date.today()}")
+        self.json_obj["score"].append(score)
+        self.json_obj["date"].append(f"{date.today()}")
 
         self.organize_file()
         self.save_file()
@@ -26,7 +26,7 @@ class Data:
             json.dump(self.json_obj, save, indent=4)
 
     def organize_file(self):
-        for i in range(len(self.json_obj["score"])):
+        for i in range(len(self.json_obj["score"])-1, 0, -1):
             for j in range(i):
                 if self.json_obj["score"][j] > self.json_obj["score"][j+1]:
                     temp_score = self.json_obj["score"][j]
@@ -39,6 +39,14 @@ class Data:
 
         self.json_obj["score"] = list(reversed(self.json_obj["score"]))
         self.json_obj["date"] = list(reversed(self.json_obj["date"]))
+
+        if len(self.json_obj["score"]) > 5:
+            self.json_obj["score"].pop(-1)
+            self.json_obj["date"].pop(-1)
+
+        print(self.json_obj["score"])
+
+        self.save_file()
 
     def reset(self):
         with open(path.join(getcwd() + "/utils/data.json"), "w"):
