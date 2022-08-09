@@ -217,7 +217,7 @@ class Game:
     """
     Classe responsável por toda a lógica do jogo
     """
-    def __init__(self, score=0):
+    def __init__(self, score=0, alien_speed_multiplier=0):
         # Controle dos laços de repetição
         self.game_over = False
         self.show_pause_menu_screen = False
@@ -249,6 +249,7 @@ class Game:
         self.alien_group = pygame.sprite.Group()
         self.alien_setup(rows=6, cols=8, x_distance=60, y_distance=48, x_offet=70, y_offset=100)
         self.alien_direction = 1
+        self.alien_speed_multiplier = alien_speed_multiplier
         self.alien_lasers_group = pygame.sprite.Group()
 
         # Extra alien
@@ -447,8 +448,10 @@ class Game:
                 if self.click:
                     self.click = False
                     self.game_over = True
+                    self.alien_speed_multiplier += 0.5
+                    print("Aa")
                     self.music.stop()
-                    new_game(score=self.score)
+                    new_game(score=self.score, alien_speed_multiplier=self.alien_speed_multiplier)
 
     def game_over_screen(self):
         """
@@ -543,7 +546,7 @@ class Game:
             self.player.update()
             self.alien_lasers_group.update()
             self.extra_alien.update()
-            self.alien_group.update(self.alien_direction)
+            self.alien_group.update(self.alien_direction * self.alien_speed_multiplier)
 
         # Desenha todos os grupos de sprites
         self.player.sprite.laser_group.draw(screen)
@@ -626,11 +629,11 @@ if __name__ == '__main__':
             text_rect.center = (x, y)
         screen.blit(text_obj, text_rect)
 
-    def new_game(score=0):
+    def new_game(score=0, alien_speed_multiplier=1):
         """
         Cria um novo jogo.
         """
-        game = Game(score)
+        game = Game(score, alien_speed_multiplier)
 
         ALIENLASER = pygame.USEREVENT + 1
         pygame.time.set_timer(ALIENLASER, 800)
@@ -651,6 +654,11 @@ if __name__ == '__main__':
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         game.pause_menu_screen()
+
+                    '''if event.key == pygame.K_p:
+                        for alien in game.alien_group:
+                            alien.kill()'''
+
 
             screen.fill((0, 0, 0))
 
